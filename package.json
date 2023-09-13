@@ -1,0 +1,14 @@
+{
+  "name": "buns",
+  "version": "1.0.0",
+  "module": "index.ts",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "dependencies": {
+    "buchta": "^0.5.99",
+    "elysia": "^0.5.16",
+    "primevue": "^3.29.2",
+    "vue": "^3.3.4"
+  }
+}
