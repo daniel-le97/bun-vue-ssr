@@ -1,17 +1,15 @@
 {
-  "name": "buns",
+  "name": "bun-vue-ssr",
   "version": "1.0.0",
   "module": "dev.ts",
   "devDependencies": {
     "bun-types": "latest"
   },
   "scripts": {
-    "build": "bun build.ts",
     "dev": "bun run dev.ts --watch",
     "update": "bunx taze major -w && bun install"
   },
   "dependencies": {
-    "@css-render/vue3-ssr": "^0.15.12",
     "bootstrap": "5.3.2",
     "consola": "^3.2.3",
     "sass": "^1.68.0",

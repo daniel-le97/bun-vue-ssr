@@ -8,15 +8,13 @@ import { renderToString } from "vue/server-renderer";
 import { createApp } from "./entry/index";
 import { FileSystemRouter } from "bun";
 import { scssPlugin} from "./plugins/scss";
-import { setup } from "@css-render/vue3-ssr";
-
-
 const logger = createConsola();
-// console.log(timer);
+
 
 logger.info( 'registering server plugins' );
+// run your server plugins before any file/import processing
 Bun.plugin( vue( true ) );
-// Bun.plugin( otherFiles );
+
 logger.success( 'server plugins registered' );
 
 
@@ -69,7 +67,7 @@ if (!build.success) {
   logger.error(build)
   process.exit(1)
 }
-// console.log(build);
+// this depends on css extracted from the vue plugin registered in the first build
 const secondBuild = await Bun.build( {
   entrypoints: [ import.meta.dir + '/assets/scss/main.scss'],
   outdir: BUILD_DIR + '/client/assets',
@@ -80,6 +78,7 @@ const secondBuild = await Bun.build( {
     ],
     minify: false,
   } );
+
   if (secondBuild.success) {
     logger.success( 'client is now bundled' );
   }else{
@@ -148,32 +147,27 @@ function getAllFiles ( directories: string[] ): string[] {
 
   return files;
 }
-// helper function to serve files from the directory
+// helper function to serve files from the directory - .build/assets/public
 function serveFromDir (
   serveDirectories: string[],
   reqPath: string
 ): Response {
-
   for ( const dir of serveDirectories )
   {
     try
     {
-
       let pathWithSuffix = path.join( dir, reqPath );
       const stat = statSync( pathWithSuffix );
-      // console.log( { dir } );
 
-      // const stat = Bun.file( pathWithSuffix ).exists();
       if ( stat && stat.isFile() )
       {
-        // logger.info( 'serving from ' + pathWithSuffix);
-        // console.log( { dir, reqPath } );
+
         return new Response( Bun.file( pathWithSuffix ) );
       }
       continue;
     } catch ( error )
     {
-      // logger.info('could not find ', pathWithSuffix)
+      //do something here if the file should have been found from the directory
     }
   }
   return null;
@@ -216,7 +210,7 @@ async function serveFromRouter ( request: Request ) {
     }
   } catch ( error )
   {
-
+    // do something here if the request should have been processed
   }
 
 }
