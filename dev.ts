@@ -18,6 +18,9 @@ Bun.plugin( vue( true ) );
 logger.success( 'server plugins registered' );
 
 
+const dogs = 'dogs'
+
+
 // constants
 const isProd = process.env.NODE_ENV === 'production';
 const PROJECT_ROOT = import.meta.dir;
