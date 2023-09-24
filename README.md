@@ -4,7 +4,7 @@ this project uses bun native tools to use vue in ssr mode!
 
 ## Description
 
-This project is a web application built with [Bun](https://bun.js.org/), a JavaScript bundler and server framework. It includes both server-side and client-side code.
+This project is a web application built with [Bun](https://bun.js.org/), a JavaScript bundler and server framework. It includes both server-side and client-side code. checkout the plugins directory to see what makes everything work!
 
 This project is heavily inspired by the following repositories:
 

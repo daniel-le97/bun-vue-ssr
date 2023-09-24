@@ -2,7 +2,6 @@ import { BunPlugin } from "bun";
 import { basename } from "path";
 import { compileScript, compileStyle, compileTemplate, parse, rewriteDefault } from "@vue/compiler-sfc";
 
-// import { Plugin } from "vue";
 const makeId = ( length: number ) => {
     let result = '';
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -16,32 +15,14 @@ const makeId = ( length: number ) => {
     return result;
 };
 
-// let ComponentImports = [{kind: '', path: '', parent: ''}]
-
 const transpileTS = ( code: string ) => {
     const transpiler = new Bun.Transpiler( { loader: "ts" } );
-    // const imports = transpiler.scan(code)
-   
-    // console.log(imports);
-    const content = transpiler.transformSync( code );
-    // console.log(content);
-    
+    const content = transpiler.transformSync( code ); 
     return content;
 };
 
 const idStore = new Map<string, string>();
 export const cssCache = []
-
-// const setCache = ( code: string, id: string ) => {
-//     const codes = cssCache.set( id, code );
-//     // console.log( { code, id } );
-
-// };
-
-
-
-
-
 
 export const vue = ( ssr = true ) => {
     const vue: BunPlugin = {
@@ -52,15 +33,10 @@ export const vue = ( ssr = true ) => {
             const isNode = process && !isBun;
 
             build.onLoad( { filter: /\.vue$/ }, async ( args ) => {
-                // const transpiler = new Bun.Transpiler( { loader: "ts" } );
-                // console.log(args);
-                
-
+     
                 let code: string = '';
                 code = await Bun.file( args.path ).text();
-                
-                // console.log(dogs);
-                
+     
                 const parsed = parse( code, {
                     filename: basename( args.path ),
                 } );
@@ -136,45 +112,16 @@ export const vue = ( ssr = true ) => {
 
                     if ( styles.length )
                     {
-                        // const compiled = sass.compileString(styles.join('\n'))
-
                         cssCache.push(styles.join())
-                        // console.log(cssCache);
-                        
-                        // const styleCode = `const style${ id } = document.createElement("style");\nstyle${ id }.innerHTML = \`${ styles.join( "\n" ) }\`;\ndocument.head.appendChild(style${ id });\n`;
-                        // console.log(styleCode, compiled.css);
-
-                        // code += styleCode;
-                        // console.log(styleCode);
-                        
-                        // const file = Bun.file( "./globals.css" );
-                        // const text = await file.text()
-                        // const sass = await import('sass')
-                        // const writer = file.writer();
-                        // sass.compileString(text + styles.join('\n'))
-                        // writer.write( sass.compileString(text + styles.join('\n'), {style: 'compressed', 'syntax': 'css'}).css) 
-                        // writer.flush();
-                        // writer.end();
-                        // console.log(cssCache);
-                        
-
                     }
                 }
                 code += 'export default sfc;';
-             
-              
-                // console.log(code);
-                
                 return {
                     contents: transpileTS( code ),
                     loader: "js"
                 };
 
             } );
-            // console.log( cssCache.forEach( css => console.log( css )))
-
-
-
 
         }
     };

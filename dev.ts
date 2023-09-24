@@ -66,6 +66,7 @@ const build = await Bun.build( {
 } );
 
 if (!build.success) {
+  logger.error(build)
   process.exit(1)
 }
 // console.log(build);
@@ -79,8 +80,12 @@ const secondBuild = await Bun.build( {
     ],
     minify: false,
   } );
-  
-  logger.success( 'client is now bundled' );
+  if (secondBuild.success) {
+    logger.success( 'client is now bundled' );
+  }else{
+    logger.error(secondBuild)
+    process.exit(1)
+  }
 
 // const serverBuild = await Bun.build( {
 //   entrypoints: [ import.meta.dir + '/entry/entry-client.ts', ...Object.values( srcRouter.routes ) ],
@@ -114,7 +119,7 @@ const buildRouter = new Bun.FileSystemRouter( {
 } );
 
 
-// unused for now
+
 // helper function to find all files in all directories - not currently used
 function getAllFiles ( directories: string[] ): string[] {
   let files: string[] = [];
@@ -176,37 +181,35 @@ function serveFromDir (
 
 // helper function to update our html and send it
 async function serveFromRouter ( request: Request ) {
-
   try
   {
-
     const match = srcRouter.match( request.url );
-    // console.log( match.kind, request.url );
 
     if ( match )
     {
       const builtMatch = buildRouter.match( request );
-      // console.log( buildRouter );
+
       if ( !builtMatch )
       {
         return new Response( "builtMatch not found", { status: 500 } );
       }
 
       let html = await Bun.file( './index.html' ).text();
-      let css = (await import(BUILD_DIR + '/client/assets/main.js')).default
-      // console.log(match);
+      const css = (await import(BUILD_DIR + '/client/assets/main.js')).default
 
-      const Component = await createApp( match.filePath );
+      const page = await createApp( match.filePath );
    
       
-      let stream = await renderToString( Component.app );
- 
-      html = html.replace( '{{ dynamicPath }}', '/pages/' + builtMatch.src );
-      html = html.replace( '<!--htmlIndex-->', stream );
-      // inline the css, i dont know if this is bad or not
-      html = html.replace( '<!--html-head-->', `<style type="text/css">${ css }</style>`);
+      const stream = await renderToString( page.app );
 
-      logger.success( 'sending', request.url );
+                  // set the page javascript we want to fetch for client
+      html = html.replace( '{{ dynamicPath }}', '/pages/' + builtMatch.src )
+                  // add the server side html to the html markup
+                 .replace( '<!--htmlIndex-->', stream )
+                 // inline the css, i dont know if this is bad or not
+                 .replace( '<!--html-head-->', `<style type="text/css">${ css }</style>`);
+
+      // send the finalized html
       return new Response( html, {
         headers: { "Content-Type": "text/html;charset=utf-8" },
       } );
