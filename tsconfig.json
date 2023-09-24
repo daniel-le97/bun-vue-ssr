@@ -3,8 +3,13 @@
         "lib": ["ESNext"],
         "module": "esnext",
         "target": "esnext",
-        "moduleResolution": "node",
+        "moduleResolution": "Bundler",
+        "moduleDetection": "force",
+        "allowJs": true,
         // "bun-types" is the important part
         "types": ["bun-types"]
-    }
+    },
+    "include": [
+        "."
+    ]
 }

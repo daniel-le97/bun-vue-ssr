@@ -1,0 +1,42 @@
+$themes: (
+  default: (
+    "body-bg": #e5e5e5,
+    "primary": #3ba5dc,
+    "secondary": #8392ab,
+    "success": #00f867,
+    "info": #5d0149,
+    "warning": #fbcf33,
+    "danger": #ea0606,
+    "light": #e9ecef,
+    "dark": #111927,
+    "grey": #cbcbcb,
+  ),
+  dark: (
+    "body-bg": #090f18,
+    "primary": #89e5b0,
+    "secondary": #fff9a4,
+    "success": #00f867,
+    "info": #330163,
+    "warning": #fbcf33,
+    "danger": #eb5757,
+    "light": #ebeef1,
+    "dark": #090f18,
+    "grey": #cbcbcb,
+  ),
+);
+
+$color-ranges: (
+  0: 0,
+  5: 5,
+  10: 10,
+  15: 15,
+  20: 20,
+  25: 25,
+  30: 30,
+  35: 35,
+  40: 40,
+);
+
+$font-sans-serif: Open Sans;
+$font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+$gradient: linear-gradient(180deg, hsla(0, 0%, 100%, 0.15), hsla(0, 0%, 100%, 0));
