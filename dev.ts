@@ -8,17 +8,19 @@ import { renderToString } from "vue/server-renderer";
 import { createApp } from "./entry/index";
 import { FileSystemRouter } from "bun";
 import { scssPlugin} from "./plugins/scss";
-const logger = createConsola();
+// import { plugin } from './plugins/sfc';
+import { builder } from "./steps/build.js";
+export const logger = createConsola();
 
 
-logger.info( 'registering server plugins' );
+// logger.info( 'registering server plugins' );
 // run your server plugins before any file/import processing
-Bun.plugin( vue( true ) );
+// Bun.plugin( plugin( { templateOptions: { ssr: true }, scriptOptions: { 'templateOptions': { ssr: true } } } ) );
 
 logger.success( 'server plugins registered' );
 
 
-const dogs = 'dogs'
+
 
 
 // constants
@@ -45,49 +47,61 @@ rmSync( BUILD_DIR, { recursive: true, force: true } );
 logger.success( 'build dir cleaned', BUILD_DIR );
 
 // console.log(srcRouter);
-
-
-// build our vue ssr app
 logger.start( 'bundling client' );
-const build = await Bun.build( {
+const build = await builder( {
   entrypoints: [ import.meta.dir + '/entry/entry-client.ts', ...Object.values( srcRouter.routes )],
-  outdir: BUILD_DIR + '/client',
-  splitting: true,
-  target: 'browser',
-  plugins: [
-    vue( false ),
-    // scssPlugin,
-    // otherFiles,
-  ],
-  minify: false,
-  define: {
-    __VUE_OPTIONS_API__: "true",
-    __VUE_PROD_DEVTOOLS__: "true"
-  }
+  outdir: BUILD_DIR + '/client'
 } );
-
 if (!build.success) {
   logger.error(build)
   process.exit(1)
 }
-// this depends on css extracted from the vue plugin registered in the first build
-const secondBuild = await Bun.build( {
-  entrypoints: [ import.meta.dir + '/assets/scss/main.scss'],
-  outdir: BUILD_DIR + '/client/assets',
-  splitting: false,
-  target: 'browser',
-  plugins: [
-    scssPlugin,
-    ],
-    minify: false,
-  } );
+console.log( build );
+// build our vue ssr app
+// logger.start( 'bundling client' );
+// const build = await Bun.build( {
+//   entrypoints: [ import.meta.dir + '/entry/entry-client.ts', ...Object.values( srcRouter.routes )],
+//   outdir: BUILD_DIR + '/client',
+//   splitting: true,
+//   target: 'browser',
+//   plugins: [
+//     plugin()
+//     // vue( false ),
+//     // sfc()
+//     // scssPlugin,
+//     // otherFiles,
+//   ],
+//   minify: false,
+//   define: {
+//     __VUE_OPTIONS_API__: "true",
+//     __VUE_PROD_DEVTOOLS__: "true"
+//   }
+// } );
 
-  if (secondBuild.success) {
-    logger.success( 'client is now bundled' );
-  }else{
-    logger.error(secondBuild)
-    process.exit(1)
-  }
+// if (!build.success) {
+//   logger.error(build)
+//   process.exit(1)
+// }
+// console.log(build);
+
+// this depends on css extracted from the vue plugin registered in the first build
+// const secondBuild = await Bun.build( {
+//   entrypoints: [ import.meta.dir + '/assets/scss/main.scss'],
+//   outdir: BUILD_DIR + '/client/assets',
+//   splitting: false,
+//   target: 'browser',
+//   plugins: [
+//     scssPlugin,
+//     ],
+//     minify: false,
+//   } );
+
+//   if (secondBuild.success) {
+//     logger.success( 'client is now bundled' );
+//   }else{
+//     logger.error(secondBuild)
+//     process.exit(1)
+//   }
 
 // const serverBuild = await Bun.build( {
 //   entrypoints: [ import.meta.dir + '/entry/entry-client.ts', ...Object.values( srcRouter.routes ) ],
@@ -119,6 +133,8 @@ const buildRouter = new Bun.FileSystemRouter( {
   dir: BUILD_DIR + '/client/pages',
   style: "nextjs",
 } );
+
+console.log( srcRouter );
 
 
 
@@ -180,21 +196,24 @@ function serveFromDir (
 async function serveFromRouter ( request: Request ) {
   try
   {
-    const match = srcRouter.match( request.url );
+    const match = srcRouter.match( request );
+    logger.info( match )
 
     if ( match )
     {
-      const builtMatch = buildRouter.match( request );
-
+      const builtMatch = buildRouter.match( match.pathname );
+      logger.info( builtMatch )
       if ( !builtMatch )
       {
         return new Response( "builtMatch not found", { status: 500 } );
       }
 
       let html = await Bun.file( './index.html' ).text();
-      const css = (await import(BUILD_DIR + '/client/assets/main.js')).default
+      // const css = (await import(BUILD_DIR + '/client/assets/main.js')).default
+    
+      
 
-      const page = await createApp( match.filePath );
+      const page = await createApp( Bun.resolveSync(match.filePath, '.'));
    
       
       const stream = await renderToString( page.app );
@@ -204,7 +223,7 @@ async function serveFromRouter ( request: Request ) {
                   // add the server side html to the html markup
                  .replace( '<!--htmlIndex-->', stream )
                  // inline the css, i dont know if this is bad or not
-                 .replace( '<!--html-head-->', `<style type="text/css">${ css }</style>`);
+      //  .replace( '<!--html-head-->', `<style type="text/css">${ css }</style>`);
 
       // send the finalized html
       return new Response( html, {
@@ -223,12 +242,38 @@ async function serveFromRouter ( request: Request ) {
 export default {
   port,
   async fetch ( request ) {
-
-    const routerResponse = await serveFromRouter( request );
-    if ( routerResponse )
+    // console.log(request);
+    const match = srcRouter.match( request );
+    if ( match )
     {
-      return routerResponse;
-    }
+
+      const buildMatch = buildRouter.match( match.pathname );
+      if ( !buildMatch )
+      {
+        return new Response( 'file not found', {
+          status: 404
+        } );
+      }
+      // console.log( {match, buildMatch});
+      const resolved = Bun.resolveSync(match.filePath, '.')
+      console.log(resolved);
+      const page = await createApp( );
+      console.log(page);
+      
+
+
+      const stream = await renderToString( page.app );
+
+
+}
+
+
+
+    // const routerResponse = await serveFromRouter( request );
+    // if ( routerResponse )
+    // {
+    //   return routerResponse;
+    // }
     let reqPath = new URL( request.url ).pathname;
     if ( reqPath === "/" )
     {

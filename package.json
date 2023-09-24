@@ -13,6 +13,8 @@
     "bootstrap": "5.3.2",
     "consola": "^3.2.3",
     "sass": "^1.68.0",
-    "vue": "^3.3.4"
+    "unplugin-vue": "^4.3.5",
+    "vue": "^3.3.4",
+    "bun-plugin-vue-sfc": "link:bun-plugin-vue-sfc"
   }
 }

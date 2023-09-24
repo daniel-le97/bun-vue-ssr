@@ -1,4 +1,5 @@
 import { createApp } from './';
+// const bootstrap = require('bootstrap')
 // import "../assets/scss/main.scss";
 
 
