@@ -101,11 +101,6 @@ export const vue = ( options: Options ) => {
 
         // helper function to sort what the start of our code should look like scrip | script w/ setup / none
         let code = compileScriptOrSetupDefault( descriptor, options, id );
-        // if ( isSFC )
-        // {
-        //   console.log( { code } );
-
-        // }
   
         if ( !!descriptor.template?.content && !descriptor.scriptSetup )
         {
