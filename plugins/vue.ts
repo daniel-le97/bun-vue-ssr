@@ -1,130 +1,172 @@
 import { BunPlugin } from "bun";
 import { basename } from "path";
-import { compileScript, compileStyle, compileTemplate, parse, rewriteDefault } from "@vue/compiler-sfc";
+import { compileScript, compileStyle, compileTemplate, parse, rewriteDefault, SFCDescriptor, SFCScriptCompileOptions, SFCTemplateCompileOptions, SFCAsyncStyleCompileOptions} from "@vue/compiler-sfc";
+// import { Options } from "../index";
+// import { transpileTS, validateDenpendency } from "../util.js";
+// import { getTemplateOptions } from "../template.js";
 
-const makeId = ( length: number ) => {
-    let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const charactersLength = characters.length;
-    let counter = 0;
-    while ( counter < length )
-    {
-        result += characters.charAt( Math.floor( Math.random() * charactersLength ) );
-        counter += 1;
-    }
-    return result;
+export function validateDenpendency() {
+  try {
+      require.resolve('vue/compiler-sfc')
+  } catch {
+      throw new Error('vue/compiler-sfc has not been installed')
+  }
+}
+
+export const transpileTS = ( code: string, loader: 'ts' | 'js' = 'ts' ) => {
+  const transpiler = new Bun.Transpiler( { loader } );
+  const content = transpiler.transformSync( code );
+  return content;
 };
 
-const transpileTS = ( code: string ) => {
-    const transpiler = new Bun.Transpiler( { loader: "ts" } );
-    const content = transpiler.transformSync( code ); 
+export interface Options {
+  // include?: string | RegExp | ( string | RegExp )[];
+  // exclude?: string | RegExp | ( string | RegExp )[]
+  
+ /**
+   * @default process.env.NODE_ENV = "production"
+   */
+  isProduction?: boolean
+  /**
+   * @default 'browser'
+   */
+  target: 'browser' | 'bun'
+
+  // options to pass on to vue/compiler-sfc
+  script?: Partial<
+      Pick<
+          SFCScriptCompileOptions,
+          | 'babelParserPlugins'
+          | 'globalTypeFiles'
+          | 'defineModel'
+          | 'propsDestructure'
+          | 'fs'
+          | 'reactivityTransform'
+          | 'hoistStatic'
+      >
+  >;
+  template?: Partial<
+      Pick<
+          SFCTemplateCompileOptions,
+          | 'compiler'
+          | 'compilerOptions'
+          | 'preprocessOptions'
+          | 'preprocessLang'
+          | 'preprocessCustomRequire'
+          | 'transformAssetUrls'
+          | 'ssr'
+      >
+  >;
+  style?: Pick<
+      SFCAsyncStyleCompileOptions,
+      'modulesOptions' | 'preprocessLang' | 'preprocessOptions' | 'postcssOptions' | 'postcssPlugins'
+  >
+}
+
+
+export const vue = ( options: Options ) => {
+  validateDenpendency();
+  const isProd = options.isProduction ?? Bun.env.NODE_ENV === 'production';
+  const ssr = options.template?.ssr ?? options.target === 'bun';
+
+  const compileScriptOrSetupDefault = ( descriptor: SFCDescriptor, options: Options, id: string ) => {
+    const content = descriptor.scriptSetup?.setup
+      ? compileScript( descriptor, {
+        ...options.script, id, inlineTemplate: true, templateOptions: descriptor.template ? { ...options.template, ssr: options.target === 'bun', ssrCssVars: [] } : {}
+      } ).content.replace( "export default ", "let sfc = " ) + ";\n"
+      : descriptor.script ? rewriteDefault( compileScript( descriptor, { ...options.script, id } ).content, "sfc" ) : 'let sfc = {};\n';
     return content;
-};
-
-const idStore = new Map<string, string>();
-export const cssCache = []
-
-export const vue = ( ssr = true ) => {
-    const vue: BunPlugin = {
-        name: 'bun-vue',
-        async setup ( build ) {
-            
-            const isBun = typeof Bun !== 'undefined';
-            const isNode = process && !isBun;
-
-            build.onLoad( { filter: /\.vue$/ }, async ( args ) => {
-     
-                let code: string = '';
-                code = await Bun.file( args.path ).text();
-     
-                const parsed = parse( code, {
-                    filename: basename( args.path ),
-                } );
-
-                let id = idStore.get( args.path ) ?? "v" + makeId( 5 );
-                idStore.set( args.path, id );
-
-                let isProd = process.env.NODE_ENV == "production" ? true : false;
-                if ( parsed.descriptor.scriptSetup?.setup )
-                {
-                    // vue setup
-                    let { content: code2 } = compileScript( parsed.descriptor, {
-                        id,
-                        inlineTemplate: true, // SSR friendly
-                        isProd,
-                        templateOptions: {
-                            filename: basename( args.path ),
-                            ssr,
-                            ssrCssVars: []
-                        }
-                    } );
-
-                    code = code2.replace( "export default ", "let sfc = " );
-                    code += ";\n";
-
-                } else
-                {
-                    // vue without setup
-
-                    let template = compileTemplate( {
-                        isProd,
-                        ssr,
-                        id,
-                        filename: basename( args.path ),
-                        ssrCssVars: [],
-                        source: parsed.descriptor.template?.content ?? "",
-                        scoped: true
-                    } );
-
-                    let script = compileScript( parsed.descriptor, {
-                        id
-                    } );
-
-                    code = rewriteDefault( script.content, "sfc" );
-                    code += template.code.replace( "export function", "function" );
-
-                    if ( ssr )
-                    {
-                        code += "\nsfc.ssrRender = ssrRender;\n";
-
-                    } else
-                    {
-                        code += "\nsfc.render = render;\n";
-                    }
-
-                }
-                let styles = [];
-                parsed.descriptor.styles[ 0 ].scoped;
+  };
+  const vue: BunPlugin = {
+    name: 'bun-vue',
+    async setup ( build ) {
+      build.onLoad( { filter: /\.vue$/ }, async ( args ) => {
+        // console.log(args.path);
 
 
-                if ( !ssr )
-                {
-                    for ( const i in parsed.descriptor.styles )
-                    {
-                        styles.push( compileStyle( {
-                            id,
-                            source: parsed.descriptor.styles[ i ].content,
-                            filename: basename( args.path ),
-                            isProd,
-                            scoped: parsed.descriptor.styles[ i ].scoped
-                        } ).code );
-                    }
 
-                    if ( styles.length )
-                    {
-                        cssCache.push(styles.join())
-                    }
-                }
-                code += 'export default sfc;';
-                return {
-                    contents: transpileTS( code ),
-                    loader: "js"
-                };
+        const { descriptor, errors: parseErrors } = parse(
+          await Bun.file( args.path ).text(), {
+          filename: basename( args.path ),
+        } );
 
-            } );
+        // Handle parse errors
+        if ( parseErrors.length > 0 )
+        {
+          throw new Error( parseErrors.join( '\n' ) );
+        }
+        // generate an id based off path hash
+
+        const id = Bun.hash( args.path ).toString();
+
+        // helper function to sort what the start of our code should look like scrip | script w/ setup / none
+        let code = compileScriptOrSetupDefault( descriptor, options, id );
+        // if ( isSFC )
+        // {
+        //   console.log( { code } );
+
+        // }
+  
+        if ( !!descriptor.template?.content && !descriptor.scriptSetup )
+        {
+          // Compile template
+          const template = compileTemplate( {
+            ...options.template,
+            isProd,
+            ssr,
+            id,
+            preprocessLang: descriptor.template.lang,
+            preprocessOptions: options.template?.preprocessOptions,
+            filename: basename( args.path ),
+            ssrCssVars: [],
+            source: descriptor.template?.content!,
+            scoped: true,
+          } );
+          // Add template code
+          code += template.code.replace( "export function", "function" );
+          // add rendering function if there isnt a "setup"
+          code += ssr ? "\nsfc.ssrRender = ssrRender;\n" : "\nsfc.render = render;\n";
+        }
+
+        // Compile and add styles if not in SSR mode
+        if ( !ssr )
+        {
+          const stylesCode = descriptor.styles
+            .map( ( style ) =>
+              compileStyle( {
+                id,
+                source: style.content,
+                filename: basename( args.path ),
+                isProd,
+                scoped: style.scoped,
+              } ).code
+            )
+            .join( "\n" );
+
+          if ( stylesCode )
+          {
+            const cssCode = `
+                let head = document.head;
+                let style = document.createElement("style");
+                head.appendChild(style);
+                style.type = "text/css";
+                style.appendChild(document.createTextNode(\`${ stylesCode }\`));`;
+            // cssCache.push( stylesCode );
+            code += cssCode;
+          }
 
         }
-    };
 
-    return vue;
+        code += 'export default sfc;\n';
+
+        return {
+          contents: transpileTS( code ),
+          loader: "js",
+        };
+
+      } );
+    },
+  };
+
+  return vue;
 };

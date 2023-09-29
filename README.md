@@ -11,6 +11,17 @@ This project is heavily inspired by the following repositories:
 - [Bux - Own-Nuxt-Like-Framework](https://github.com/LowByteFox/Own-Nuxt-Like-Framework)
 - [react-ssr](https://github.com/bun-community/create-templates): from the bun-community templates used before bun v1.0
 
+allows for use of:
+
+- no script-setup 
+- script only
+- template only
+- normal SFC's with setup
+
+
+# Caveats 
+not all compiling options for vue SFC's are implemented
+
 
 ## Installation
 
