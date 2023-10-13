@@ -1,5 +1,5 @@
 const timer = Bun.nanoseconds()
-import { createConsola } from "consola";
+import { default as logger } from "consola";
 import { vue } from "./plugins/vue";
 import * as path from "path";
 import { existsSync, readdirSync, rmSync, statSync } from "fs";
@@ -8,7 +8,7 @@ import { renderToString } from "vue/server-renderer";
 import { createApp } from "./entry/index";
 import { FileSystemRouter } from "bun";
 // import { scssPlugin} from "./plugins/scss";
-const logger = createConsola();
+
 
 
 logger.info( 'registering server plugins' );
