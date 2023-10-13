@@ -13,7 +13,7 @@ const logger = createConsola();
 
 logger.info( 'registering server plugins' );
 // run your server plugins before any file/import processing
-Bun.plugin( vue( {target: 'bun'} ) );
+// Bun.plugin( vue( {target: 'bun'} ) );
 
 logger.success( 'server plugins registered' );
 
@@ -24,7 +24,7 @@ const PROJECT_ROOT = import.meta.dir;
 const PUBLIC_DIR = path.resolve( PROJECT_ROOT, "public" );
 const BUILD_DIR = path.resolve( PROJECT_ROOT, ".build" );
 const ASSETS_DIR = path.resolve( PROJECT_ROOT, 'assets' );
-const serveDirectories = [ BUILD_DIR + '/client', ASSETS_DIR, PUBLIC_DIR ];
+const serveDirectories = [ BUILD_DIR + '/client', ASSETS_DIR, PROJECT_ROOT, PUBLIC_DIR ];
 const port = process.env.PORT || 3000
 // const indexCSS = '/main.css';
 
@@ -177,6 +177,7 @@ async function serveFromRouter ( request: Request ) {
 export default {
   port,
   async fetch ( request ) {
+console.log(request.url);
 
     const routerResponse = await serveFromRouter( request );
     if ( routerResponse )

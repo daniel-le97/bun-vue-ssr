@@ -24,7 +24,8 @@
     </div>
     
 </template>
-<style>
+<style lang="scss">
+@import '../assets/scss/main.scss';
 body {
     margin: 0;
     padding: 0;

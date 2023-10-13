@@ -2,6 +2,7 @@ import { BunPlugin } from "bun";
 import { basename } from "path";
 import { compileScript, compileStyle, compileTemplate, parse, rewriteDefault, SFCDescriptor, SFCScriptCompileOptions, SFCTemplateCompileOptions, SFCAsyncStyleCompileOptions} from "@vue/compiler-sfc";
 // import { Options } from "../index";
+
 // import { transpileTS, validateDenpendency } from "../util.js";
 // import { getTemplateOptions } from "../template.js";
 
@@ -127,11 +128,13 @@ export const vue = ( options: Options ) => {
         if ( !ssr )
         {
           const stylesCode = descriptor.styles
-            .map( ( style ) =>
+            .map( ( style, i ) =>
               compileStyle( {
                 id,
                 source: style.content,
                 filename: basename( args.path ),
+                // 'preprocessLang': descriptor.styles[i].lang as SFCAsyncStyleCompileOptions['preprocessLang'],
+                // 'preprocessOptions': options?.style?.preprocessOptions ?? {},
                 isProd,
                 scoped: style.scoped,
               } ).code
@@ -147,6 +150,8 @@ export const vue = ( options: Options ) => {
                 style.type = "text/css";
                 style.appendChild(document.createTextNode(\`${ stylesCode }\`));`;
             // cssCache.push( stylesCode );
+            console.log( stylesCode );
+
             code += cssCode;
           }
 
