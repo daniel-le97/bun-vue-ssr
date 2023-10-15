@@ -70,13 +70,6 @@ export const vue = ( options: Options ) => {
 
 
   const compileScriptOrSetupDefault = ( descriptor: SFCDescriptor, options: Options, id: string ) => {
-    // const script = descriptor.scriptSetup || descriptor.script
-    // if (script) {
-    //   console.log(script.content);
-      
-      
-    // }
-    
     const content = descriptor.scriptSetup?.setup
       ? compileScript( descriptor, {
         
