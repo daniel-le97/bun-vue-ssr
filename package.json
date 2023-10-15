@@ -3,13 +3,17 @@
   "version": "1.0.0",
   "module": "dev.ts",
   "devDependencies": {
-    "bun-auto-import": "latest",
     "bun-types": "latest",
+    "postcss": "^8.4.31",
+    "postcss-import": "^15.1.0",
+    "postcss-scss": "^4.0.9",
+    "tailwindcss": "^3.3.3",
     "unimport": "^3.4.0"
   },
   "scripts": {
     "dev": "bun run dev.ts --watch",
-    "update": "bunx taze major -w && bun install"
+    "update": "bunx taze major -w && bun install",
+    "build": "bun build.ts"
   },
   "dependencies": {
     "bootstrap": "5.3.2",

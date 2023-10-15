@@ -11,7 +11,7 @@ export const PROJECT_ROOT = process.cwd()
 export const PUBLIC_DIR = path.resolve( PROJECT_ROOT, "public" );
 export const BUILD_DIR = path.resolve( PROJECT_ROOT, ".build" );
 export const ASSETS_DIR = path.resolve( PROJECT_ROOT, 'assets' );
-export const port = process.env.PORT ?? 3000
+export const port = process.env.PORT ?? 3032
 
 // add other directories you would like to serve statically here
 export const serveDirectories = [ BUILD_DIR + '/client', ASSETS_DIR, PROJECT_ROOT, PUBLIC_DIR ];
@@ -65,7 +65,7 @@ export function serveFromDir (
         let html = await Bun.file( './index.html' ).text();
 
         const page = await createApp( match.filePath );
-     
+        const tailwindcss = await Bun.file( './assets/output.css' ).text()
         
         const stream = await renderToString( page.app );
   
@@ -73,6 +73,8 @@ export function serveFromDir (
         html = html.replace( '{{ dynamicPath }}', '/pages/' + builtMatch.src )
                     // add the server side html to the html markup
                    .replace( '<!--html-body-->', stream )
+                    
+                   .replace('<!--html-head-->', `<style>${tailwindcss}</style>`)
   
   
         // send the finalized html  

@@ -8,9 +8,9 @@ import consola from "consola";
 
 let serverProcess: Subprocess | null = null;
 let isRestarting = false;
-
 const server: { instance: null | Server } = { instance: null }
 
+process.on('SIGSEGV', () => serverProcess? serverProcess.kill() : '')
 // we need a seperate server instance because the main one will turn off while reloading
 const app = new Elysia()
 .ws('/ws', {
@@ -98,7 +98,7 @@ const fileWatch = async ( event: WatchEventType, filename: string | Error | unde
         
         server.instance?.publish('refreshEvent', 'reload')
     } catch (error) {
-        consola.warn(error)
+        consola.warn('ERROR in WATCH: ', error)
         serverProcess ? serverProcess.kill(1) : ''
         process.exit(1)
     }

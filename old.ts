@@ -11,12 +11,6 @@ import { FileSystemRouter } from "bun";
 const logger = createConsola();
 
 
-logger.info( 'registering server plugins' );
-// run your server plugins before any file/import processing
-// Bun.plugin( vue( {target: 'bun'} ) );
-
-logger.success( 'server plugins registered' );
-
 
 // constants
 const isProd = process.env.NODE_ENV === 'production';
@@ -25,7 +19,7 @@ const PUBLIC_DIR = path.resolve( PROJECT_ROOT, "public" );
 const BUILD_DIR = path.resolve( PROJECT_ROOT, ".build" );
 const ASSETS_DIR = path.resolve( PROJECT_ROOT, 'assets' );
 const serveDirectories = [ BUILD_DIR + '/client', ASSETS_DIR, PROJECT_ROOT, PUBLIC_DIR ];
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 3421
 // const indexCSS = '/main.css';
 
 // get the pages from the filesystem to add as entrypoints for our bundler
@@ -74,35 +68,6 @@ const buildRouter = new Bun.FileSystemRouter( {
   style: "nextjs",
 } );
 
-
-// helper function to find all files in all directories - not currently used
-function getAllFiles ( directories: string[] ): string[] {
-  let files: string[] = [];
-
-  function traverseDirectory ( dir: string ) {
-    const entries = readdirSync( dir, { withFileTypes: true } );
-
-    for ( const entry of entries )
-    {
-      const fullPath = path.join( dir, entry.name );
-
-      if ( entry.isDirectory() )
-      {
-        traverseDirectory( fullPath );
-      } else
-      {
-        files.push( fullPath );
-      }
-    }
-  }
-
-  for ( const directory of directories )
-  {
-    traverseDirectory( directory );
-  }
-
-  return files;
-}
 // helper function to serve files from the directory - .build/assets/public
 function serveFromDir (
   serveDirectories: string[],
